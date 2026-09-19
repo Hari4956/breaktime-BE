@@ -1,0 +1,423 @@
+# Food Order & Delivery Backend API Documentation
+
+===============================================================================
+1. AUTHENTICATION & HEADERS
+===============================================================================
+
+- Public Endpoints: Anyone can access without a token (e.g., Register, Login, Get Categories, Get Products).
+- Protected Endpoints: Requires a Bearer JWT Token in the HTTP Authorization Header.
+- Authorization Header Format:
+    Authorization: Bearer <YOUR_JWT_TOKEN>
+
+- User Roles: customer (default), restaurant, admin.
+
+===============================================================================
+2. SERVER HEALTH CHECK
+===============================================================================
+
+-------------------------------------------------------------------------------
+[GET] /
+-------------------------------------------------------------------------------
+Access: Public
+Description: Verifies that the backend server is alive and running.
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Welcome to the Food Order and Delivery API backend!"
+}
+
+===============================================================================
+3. AUTHENTICATION APIS (/api/auth)
+===============================================================================
+
+-------------------------------------------------------------------------------
+[POST] /api/auth/register
+-------------------------------------------------------------------------------
+Access: Public
+Content-Type: application/json
+
+Request Body:
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "Password123!",
+  "phone": "+1234567890",       // Optional
+  "role": "customer"            // Optional: "customer" (default), "restaurant", "admin"
+}
+
+Response (201 Created):
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890",
+    "role": "customer",
+    "token": "eyJhbGciOiJIUzI1NiIsIn..."
+  }
+}
+
+-------------------------------------------------------------------------------
+[POST] /api/auth/login
+-------------------------------------------------------------------------------
+Access: Public
+Content-Type: application/json
+
+Request Body:
+{
+  "email": "john@example.com",
+  "password": "Password123!"
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890",
+    "role": "customer",
+    "addresses": [],
+    "token": "eyJhbGciOiJIUzI1NiIsIn..."
+  }
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/auth/profile
+-------------------------------------------------------------------------------
+Access: Private (Requires JWT Token)
+Headers: Authorization: Bearer <TOKEN>
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890",
+    "role": "customer",
+    "addresses": []
+  }
+}
+
+-------------------------------------------------------------------------------
+[PUT] /api/auth/profile
+-------------------------------------------------------------------------------
+Access: Private (Requires JWT Token)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type: application/json
+
+Request Body (All fields optional):
+{
+  "name": "John Updated",
+  "phone": "+9876543210",
+  "password": "NewSecurePassword123!",
+  "addresses": [
+    {
+      "street": "123 Main St",
+      "city": "Metropolis",
+      "zipCode": "10001",
+      "isDefault": true
+    }
+  ]
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "name": "John Updated",
+    "email": "john@example.com",
+    "phone": "+9876543210",
+    "role": "customer",
+    "addresses": [...]
+  }
+}
+
+===============================================================================
+4. CATEGORY APIS (/api/categories)
+===============================================================================
+
+-------------------------------------------------------------------------------
+[POST] /api/categories/upload-image
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type: multipart/form-data
+Form Key: image (File: JPG, PNG, WEBP, max 5MB)
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Category image uploaded successfully to Cloudinary",
+  "data": {
+    "url": "https://res.cloudinary.com/cloudname/image/upload/v12345/restaurant_categories/sample.jpg",
+    "public_id": "restaurant_categories/sample"
+  }
+}
+
+-------------------------------------------------------------------------------
+[POST] /api/categories OR /api/categories/create
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type Options: application/json OR multipart/form-data
+
+Request Body (JSON Example):
+{
+  "name": "Burgers",
+  "description": "Flame-grilled juicy burgers",
+  "image": "https://res.cloudinary.com/cloudname/image/upload/v12345/burger.jpg",
+  "status": "active" // Optional: "active" (default) or "inactive"
+}
+
+Response (201 Created):
+{
+  "success": true,
+  "message": "Category created successfully",
+  "data": {
+    "_id": "6501a2b3c4d5e6f7a8b9c0d1",
+    "name": "Burgers",
+    "description": "Flame-grilled juicy burgers",
+    "image": "https://res.cloudinary.com/...",
+    "status": "active"
+  }
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/categories OR /api/categories/get-all
+-------------------------------------------------------------------------------
+Access: Public
+Query Parameters:
+  - status: active (default), inactive, or all
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Categories fetched successfully",
+  "data": [
+    {
+      "_id": "6501a2b3c4d5e6f7a8b9c0d1",
+      "name": "Burgers",
+      "description": "Flame-grilled juicy burgers",
+      "image": "https://...",
+      "status": "active"
+    }
+  ]
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/categories/:id
+-------------------------------------------------------------------------------
+Access: Public
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "_id": "6501a2b3c4d5e6f7a8b9c0d1",
+    "name": "Burgers",
+    "description": "Flame-grilled juicy burgers",
+    "image": "https://...",
+    "status": "active"
+  }
+}
+
+-------------------------------------------------------------------------------
+[PUT] /api/categories/:id
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type Options: application/json OR multipart/form-data
+
+Request Body:
+{
+  "name": "Gourmet Burgers",
+  "description": "Handcrafted gourmet burgers",
+  "status": "active"
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Category updated successfully",
+  "data": { ... }
+}
+
+-------------------------------------------------------------------------------
+[DELETE] /api/categories/:id
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Category deleted successfully"
+}
+
+===============================================================================
+5. PRODUCT APIS (/api/products)
+===============================================================================
+
+-------------------------------------------------------------------------------
+[POST] /api/products/upload-image
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type: multipart/form-data
+Form Key: image (File: JPG, PNG, WEBP, max 5MB)
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Image uploaded successfully to Cloudinary",
+  "data": {
+    "url": "https://res.cloudinary.com/cloudname/image/upload/v12345/restaurant_products/sample.jpg",
+    "public_id": "restaurant_products/sample"
+  }
+}
+
+-------------------------------------------------------------------------------
+[POST] /api/products OR /api/products/create
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type Options: application/json OR multipart/form-data
+
+Request Body Example:
+{
+  "name": "Classic Cheeseburger",
+  "description": "Single patty with cheddar cheese and fresh veggies",
+  "price": 12.99,
+  "category": "6501a2b3c4d5e6f7a8b9c0d1", // Accepts Category ID OR Category Name string (e.g. "Burgers")
+  "image": "https://res.cloudinary.com/...", // Direct Cloudinary URL or file upload under 'image' field
+  "isAvailable": true,                      // Optional (default: true)
+  "isVeg": false,                           // Optional (default: false)
+  "isFeatured": true,                       // Optional (default: false)
+  "preparationTime": 15,                    // Optional (minutes, default: 0)
+  "discount": 10,                           // Optional (percentage 0-100, default: 0)
+  "status": "active"                        // Optional ("active" default, or "inactive")
+}
+
+Response (201 Created):
+{
+  "success": true,
+  "message": "Product created successfully",
+  "data": {
+    "_id": "6502b3c4d5e6f7a8b9c0d1e2",
+    "name": "Classic Cheeseburger",
+    "description": "Single patty with cheddar cheese and fresh veggies",
+    "price": 12.99,
+    "discount": 10,
+    "finalPrice": 11.69,
+    "category": {
+      "_id": "6501a2b3c4d5e6f7a8b9c0d1",
+      "name": "Burgers",
+      "image": "https://..."
+    },
+    "image": "https://...",
+    "isAvailable": true,
+    "isVeg": false,
+    "isFeatured": true,
+    "preparationTime": 15,
+    "status": "active",
+    "createdBy": {
+      "_id": "64f8a1b2c3d4e5f6a7b8c9d0",
+      "name": "John Doe",
+      "email": "john@example.com"
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/products OR /api/products/get-all
+-------------------------------------------------------------------------------
+Access: Public
+Query Parameters:
+  - page            : Number (default: 1)
+  - limit           : Number (default: 10)
+  - search          : String (searches product name & description)
+  - category        : String (Category ObjectId OR Category Name regex)
+  - isVeg           : Boolean (true / false)
+  - isAvailable     : Boolean (true / false)
+  - isFeatured      : Boolean (true / false)
+  - status          : String (active [default], inactive, all)
+  - minPrice        : Number (filters finalPrice >= minPrice)
+  - maxPrice        : Number (filters finalPrice <= maxPrice)
+  - sortBy          : String (price, name, createdAt [default], preparationTime, finalPrice)
+  - sortOrder       : String (desc [default], asc)
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Products fetched successfully",
+  "data": [ ... ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 45,
+    "totalPages": 5
+  }
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/products/:id
+-------------------------------------------------------------------------------
+Access: Public
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "_id": "6502b3c4d5e6f7a8b9c0d1e2",
+    "name": "Classic Cheeseburger",
+    "price": 12.99,
+    "discount": 10,
+    "finalPrice": 11.69,
+    "category": { ... },
+    "createdBy": { ... }
+  }
+}
+
+-------------------------------------------------------------------------------
+[PUT] /api/products/:id
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type Options: application/json OR multipart/form-data
+
+Request Body (All fields optional):
+{
+  "name": "Double Cheeseburger",
+  "price": 14.99,
+  "discount": 15,
+  "isAvailable": true
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Product updated successfully",
+  "data": { ... }
+}
+
+-------------------------------------------------------------------------------
+[DELETE] /api/products/:id
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Product deleted successfully"
+}
