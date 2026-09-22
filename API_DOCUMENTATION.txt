@@ -421,3 +421,109 @@ Response (200 OK):
   "success": true,
   "message": "Product deleted successfully"
 }
+
+===============================================================================
+6. CART APIS (/api/cart)
+===============================================================================
+
+-------------------------------------------------------------------------------
+[GET] /api/cart
+-------------------------------------------------------------------------------
+Access: Private (Roles: customer)
+Headers: Authorization: Bearer <TOKEN>
+Description: Get the current user's cart (creates an empty one if it doesn't exist).
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "user": "64f8a1b2c3d4e5f6a7b8c9d0",
+    "items": [
+      {
+        "product": { ...product_details... },
+        "quantity": 2
+      }
+    ],
+    "totalPrice": 23.38,
+    "createdAt": "2023-10-12T10:00:00Z",
+    "updatedAt": "2023-10-12T10:00:00Z"
+  }
+}
+
+-------------------------------------------------------------------------------
+[POST] /api/cart/add
+-------------------------------------------------------------------------------
+Access: Private (Roles: customer)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type: application/json
+Description: Add a product to the cart or increment its quantity if it exists.
+
+Request Body:
+{
+  "productId": "6502b3c4d5e6f7a8b9c0d1e2",
+  "quantity": 1  // Optional, defaults to 1
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "totalPrice": 35.07
+  }
+}
+
+-------------------------------------------------------------------------------
+[PUT] /api/cart/update
+-------------------------------------------------------------------------------
+Access: Private (Roles: customer)
+Headers: Authorization: Bearer <TOKEN>
+Content-Type: application/json
+Description: Update the exact quantity of a specific product in the cart.
+
+Request Body:
+{
+  "productId": "6502b3c4d5e6f7a8b9c0d1e2",
+  "quantity": 3
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "totalPrice": 46.76
+  }
+}
+
+-------------------------------------------------------------------------------
+[DELETE] /api/cart/remove/:productId
+-------------------------------------------------------------------------------
+Access: Private (Roles: customer)
+Headers: Authorization: Bearer <TOKEN>
+Description: Remove a specific product from the cart completely.
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "totalPrice": 0
+  }
+}
+
+-------------------------------------------------------------------------------
+[DELETE] /api/cart/clear
+-------------------------------------------------------------------------------
+Access: Private (Roles: customer)
+Headers: Authorization: Bearer <TOKEN>
+Description: Empty all items from the cart.
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "items": [],
+    "totalPrice": 0
+  }
+}
