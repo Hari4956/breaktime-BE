@@ -138,7 +138,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Classic Cheese Burger',
     description: 'Angus beef patty with cheddar cheese, lettuce, tomato, pickles, and signature house sauce.',
-    price: 12.99,
+    price: 149,
     discount: 10,
     category: categoryMap['Burgers'],
     image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop',
@@ -151,7 +151,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Double Smoky Bacon Burger',
     description: 'Two juicy beef patties, crispy smoked bacon, melted Swiss cheese, and barbecue glaze.',
-    price: 16.49,
+    price: 249,
     discount: 15,
     category: categoryMap['Burgers'],
     image: 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=500&auto=format&fit=crop',
@@ -164,7 +164,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Veggie Supreme Garden Burger',
     description: 'Plant-based patty with avocado, grilled onions, lettuce, and vegan garlic aioli.',
-    price: 11.49,
+    price: 129,
     discount: 0,
     category: categoryMap['Burgers'],
     image: 'https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?w=500&auto=format&fit=crop',
@@ -179,7 +179,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Margherita Supreme Pizza',
     description: 'Fresh Mozzarella, San Marzano tomato sauce, fresh basil leaves, and extra virgin olive oil.',
-    price: 14.99,
+    price: 299,
     discount: 5,
     category: categoryMap['Pizza'],
     image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500&auto=format&fit=crop',
@@ -192,7 +192,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Pepperoni Feast Pizza',
     description: 'Loaded with sliced spicy pepperoni, mozzarella, and house-made tomato sauce.',
-    price: 17.99,
+    price: 399,
     discount: 10,
     category: categoryMap['Pizza'],
     image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500&auto=format&fit=crop',
@@ -205,7 +205,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'BBQ Chicken Ranch Pizza',
     description: 'Tender grilled chicken pieces, red onions, bacon bits, cilantro, and tangy BBQ sauce drizzle.',
-    price: 18.99,
+    price: 449,
     discount: 15,
     category: categoryMap['Pizza'],
     image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop',
@@ -220,7 +220,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Buffalo Chicken Wings (8 pcs)',
     description: 'Crispy fried wings tossed in spicy buffalo sauce, served with blue cheese dip and celery.',
-    price: 10.99,
+    price: 199,
     discount: 0,
     category: categoryMap['Starters & Snacks'],
     image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=500&auto=format&fit=crop',
@@ -233,7 +233,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Loaded Garlic Cheese Fries',
     description: 'Golden french fries tossed in garlic butter, topped with melted mozzarella and herbs.',
-    price: 7.99,
+    price: 149,
     discount: 0,
     category: categoryMap['Starters & Snacks'],
     image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop',
@@ -248,7 +248,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Creamy Fettuccine Alfredo',
     description: 'Rich Parmesan cream sauce tossed with fresh fettuccine pasta and parsley.',
-    price: 15.99,
+    price: 299,
     discount: 10,
     category: categoryMap['Italian & Pasta'],
     image: 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?w=500&auto=format&fit=crop',
@@ -261,7 +261,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Spaghetti Bolognese',
     description: 'Traditional slow-cooked Italian beef ragu over tender spaghetti pasta.',
-    price: 16.99,
+    price: 349,
     discount: 12,
     category: categoryMap['Italian & Pasta'],
     image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&auto=format&fit=crop',
@@ -276,7 +276,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Triple Chocolate Lava Cake',
     description: 'Warm chocolate cake with a molten chocolate center, served with vanilla ice cream.',
-    price: 8.99,
+    price: 149,
     discount: 0,
     category: categoryMap['Desserts'],
     image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop',
@@ -289,7 +289,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'New York Style Cheesecake',
     description: 'Rich and creamy classic cheesecake with a graham cracker crust and strawberry glaze.',
-    price: 7.99,
+    price: 199,
     discount: 5,
     category: categoryMap['Desserts'],
     image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=500&auto=format&fit=crop',
@@ -304,7 +304,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Fresh Mango Passionfruit Smoothie',
     description: 'Blended fresh tropical mangoes, passionfruit, and natural honey.',
-    price: 5.99,
+    price: 99,
     discount: 0,
     category: categoryMap['Beverages & Drinks'],
     image: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=500&auto=format&fit=crop',
@@ -317,7 +317,7 @@ const getProducts = (categoryMap, restaurantUserId) => [
   {
     name: 'Iced Caramel Macchiato',
     description: 'Espresso combined with milk and vanilla syrup, topped with caramel drizzle over ice.',
-    price: 4.99,
+    price: 129,
     discount: 0,
     category: categoryMap['Beverages & Drinks'],
     image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=500&auto=format&fit=crop',
