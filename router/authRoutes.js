@@ -7,11 +7,12 @@ const {
   registerUser,
   loginUser,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  getAllCustomers
 } = require('../controller/authController');
 
 // Import our authentication middleware
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 /**
  * Route: Register a new user
@@ -45,6 +46,14 @@ router.get('/profile', protect, getUserProfile);
  * This route is Private, protected by JWT middleware.
  */
 router.put('/profile', protect, updateUserProfile);
+
+/**
+ * Route: Get all customers
+ * Method: GET
+ * URL: /api/auth/customers
+ * This route is Private (Admin/Restaurant only).
+ */
+router.get('/customers', protect, authorize('admin', 'restaurant'), getAllCustomers);
 
 // Export the router so it can be mounted in server.js
 module.exports = router;
