@@ -215,10 +215,34 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get all customers
+ * @route   GET /api/auth/customers
+ * @access  Private (Admin/Restaurant)
+ */
+const getAllCustomers = async (req, res) => {
+  try {
+    // Find all users with the role 'customer'
+    const customers = await User.find({ role: 'customer' }).select('-password');
+    res.status(200).json({
+      success: true,
+      data: customers
+    });
+  } catch (error) {
+    console.error('Fetch customers error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching customers',
+      error: error.message
+    });
+  }
+};
+
 // Export all the functions so our router can map them to URLs
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
+  getAllCustomers
 };

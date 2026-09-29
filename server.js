@@ -2,17 +2,22 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./router/authRoutes');
 const categoryRoutes = require('./router/categoryRoutes');
 const productRoutes = require('./router/productRoutes');
 const cartRoutes = require('./router/cartRoutes');
+const orderRoutes = require('./router/orderRoutes');
 
 // 1. Connect to our MongoDB database
 connectDB();
 
 // 2. Initialize the Express Application
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors());
 
 /**
  * Built-in Middleware: express.json()
@@ -44,11 +49,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 
 // 3. Define the port to listen on.
 // We read it from the env file, or fallback to port 5000 if not defined.
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // 4. Start the server and listen for incoming HTTP requests
 app.listen(PORT, () => {
