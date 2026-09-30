@@ -26,6 +26,45 @@ const resolveCategoryId = async (categoryInput) => {
   return null;
 };
 
+const getAggregatedProduct = async (productId) => {
+  const products = await Product.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(productId) } },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'category'
+      }
+    },
+    { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy',
+        foreignField: '_id',
+        as: 'createdBy'
+      }
+    },
+    { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        'category.description': 0,
+        'category.createdAt': 0,
+        'category.updatedAt': 0,
+        'category.__v': 0,
+        'createdBy.password': 0,
+        'createdBy.role': 0,
+        'createdBy.addresses': 0,
+        'createdBy.createdAt': 0,
+        'createdBy.updatedAt': 0,
+        'createdBy.__v': 0
+      }
+    }
+  ]);
+  return products[0];
+};
+
 /**
  * @desc    Upload product image standalone to Cloudinary
  * @route   POST /api/products/upload-image
@@ -165,9 +204,7 @@ const createProduct = async (req, res) => {
       createdBy: req.user._id
     });
 
-    const populatedProduct = await Product.findById(product._id)
-      .populate('category', '_id name image')
-      .populate('createdBy', '_id name email');
+    const populatedProduct = await getAggregatedProduct(product._id);
 
     res.status(201).json({
       success: true,
@@ -274,12 +311,44 @@ const getProducts = async (req, res) => {
     const total = await Product.countDocuments(query);
     const totalPages = Math.ceil(total / limitNum) || 1;
 
-    const products = await Product.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNum)
-      .populate('category', '_id name image')
-      .populate('createdBy', '_id name email');
+    const products = await Product.aggregate([
+      { $match: query },
+      { $sort: sortOptions },
+      { $skip: skip },
+      { $limit: limitNum },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy'
+        }
+      },
+      { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          'category.description': 0,
+          'category.createdAt': 0,
+          'category.updatedAt': 0,
+          'category.__v': 0,
+          'createdBy.password': 0,
+          'createdBy.role': 0,
+          'createdBy.addresses': 0,
+          'createdBy.createdAt': 0,
+          'createdBy.updatedAt': 0,
+          'createdBy.__v': 0
+        }
+      }
+    ]);
 
     res.status(200).json({
       success: true,
@@ -318,9 +387,7 @@ const getProductById = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(id)
-      .populate('category', '_id name image')
-      .populate('createdBy', '_id name email');
+    const product = await getAggregatedProduct(id);
 
     if (!product) {
       return res.status(404).json({
@@ -450,9 +517,7 @@ const updateProduct = async (req, res) => {
 
     await product.save();
 
-    const updatedProduct = await Product.findById(product._id)
-      .populate('category', '_id name image')
-      .populate('createdBy', '_id name email');
+    const updatedProduct = await getAggregatedProduct(product._id);
 
     res.status(200).json({
       success: true,

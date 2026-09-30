@@ -42,7 +42,11 @@ const orderSchema = new mongoose.Schema({
     street: String,
     city: String,
     state: String,
-    zipCode: String
+    zipCode: String,
+    location: {
+      lat: Number,
+      long: Number
+    }
   }
 }, { timestamps: true });
 

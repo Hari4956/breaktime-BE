@@ -527,3 +527,143 @@ Response (200 OK):
     "totalPrice": 0
   }
 }
+
+===============================================================================
+7. ORDERS ( /api/orders )
+===============================================================================
+
+-------------------------------------------------------------------------------
+[POST] /api/orders/place-order
+-------------------------------------------------------------------------------
+Access: Private (Any logged-in user)
+Headers: Authorization: Bearer <TOKEN>
+Description: Places a new order using the items currently in the user's cart. The user's cart is automatically cleared upon success.
+
+Body (Optional - falls back to user's first address if not provided):
+{
+  "shippingAddress": {
+    "street": "123 Main St",
+    "city": "NY",
+    "state": "NY",
+    "zipCode": "10001",
+    "location": {
+      "lat": 40.7128,
+      "long": -74.0060
+    }
+  }
+}
+// Note: You can also pass "location" at the root level alongside "shippingAddress" and it will be merged automatically.
+
+Response (201 Created):
+{
+  "success": true,
+  "data": {
+    "user": "64d...",
+    "items": [
+      {
+        "product": "64c...",
+        "name": "Pizza",
+        "quantity": 2,
+        "price": 12.99
+      }
+    ],
+    "totalAmount": 25.98,
+    "shippingAddress": {
+      "street": "123 Main St",
+      "city": "NY",
+      "state": "NY",
+      "zipCode": "10001",
+      "location": {
+        "lat": 40.7128,
+        "long": -74.0060
+      }
+    },
+    "status": "pending",
+    "_id": "64e...",
+    "createdAt": "2023-10-15T12:00:00.000Z"
+  }
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/orders/my-orders
+-------------------------------------------------------------------------------
+Access: Private (Customer)
+Headers: Authorization: Bearer <TOKEN>
+Description: Retrieves all orders for the currently logged-in user, sorted by newest first.
+
+Response (200 OK):
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64e...",
+      "user": "64d...",
+      "items": [
+        {
+          "product": "64c...",
+          "name": "Pizza",
+          "quantity": 2,
+          "price": 12.99
+        }
+      ],
+      "totalAmount": 25.98,
+      "shippingAddress": {...},
+      "status": "pending",
+      "createdAt": "2023-10-15T12:00:00.000Z"
+    }
+  ]
+}
+
+-------------------------------------------------------------------------------
+[GET] /api/orders/all-orders
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Description: Retrieves all orders across the system, sorted by newest first.
+
+Response (200 OK):
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "64e...",
+      "user": {
+        "_id": "64d...",
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "items": [...],
+      "totalAmount": 25.98,
+      "shippingAddress": {...},
+      "status": "pending",
+      "createdAt": "2023-10-15T12:00:00.000Z"
+    }
+  ]
+}
+
+-------------------------------------------------------------------------------
+[PUT] /api/orders/:id/status
+-------------------------------------------------------------------------------
+Access: Private (Roles: admin, restaurant)
+Headers: Authorization: Bearer <TOKEN>
+Description: Updates the status of an existing order.
+
+URL Parameters:
+- id: The unique ID of the order
+
+Body:
+{
+  "status": "confirmed"  // (e.g. pending, confirmed, preparing, delivered, cancelled)
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "_id": "64e...",
+    "status": "confirmed",
+    "totalAmount": 25.98,
+    "items": [...],
+    ...
+  }
+}
