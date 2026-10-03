@@ -27,7 +27,7 @@ router.post(
 
 // Protected Category Creation (Supports POST / and POST /create, with JSON or file upload)
 router.post(
-  '/create',
+  '/',
   protect,
   authorize('admin', 'restaurant'),
   upload.single('image'),
