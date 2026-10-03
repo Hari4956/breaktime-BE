@@ -1,17 +1,59 @@
 const Cart = require('../model/Cart');
 const Product = require('../model/Product');
 
+const mongoose = require('mongoose');
+
 /**
- * Helper function to calculate the total price of a cart.
- * Assumes cart.items has 'product' populated (at least with 'finalPrice' and 'price').
+ * Helper function to calculate the total price of a cart without populate.
  */
-const calculateTotal = (items) => {
+const calculateTotal = async (cartItems) => {
+  if (!cartItems || cartItems.length === 0) return 0;
+  
+  const productIds = cartItems.map(i => i.product);
+  const products = await Product.find({ _id: { $in: productIds } });
+  
   let total = 0;
-  items.forEach(item => {
-    const priceToUse = item.product.finalPrice || item.product.price;
-    total += priceToUse * item.quantity;
+  cartItems.forEach(item => {
+    const prod = products.find(p => p._id.toString() === item.product.toString());
+    if (prod) {
+      const priceToUse = prod.finalPrice || prod.price;
+      total += priceToUse * item.quantity;
+    }
   });
   return Math.round(total * 100) / 100;
+};
+
+const getAggregatedCart = async (userId) => {
+  const carts = await Cart.aggregate([
+    { $match: { user: new mongoose.Types.ObjectId(userId) } },
+    { $unwind: { path: '$items', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'items.product',
+        foreignField: '_id',
+        as: 'items.product'
+      }
+    },
+    { $unwind: { path: '$items.product', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: '$_id',
+        user: { $first: '$user' },
+        totalPrice: { $first: '$totalPrice' },
+        items: {
+          $push: {
+            $cond: {
+              if: { $ne: [{ $type: '$items.product' }, 'missing'] },
+              then: '$items',
+              else: '$$REMOVE'
+            }
+          }
+        }
+      }
+    }
+  ]);
+  return carts[0];
 };
 
 /**
@@ -21,10 +63,8 @@ const calculateTotal = (items) => {
  */
 exports.getCart = async (req, res) => {
   try {
-    let cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
-
+    let cart = await Cart.findOne({ user: req.user.id });
     if (!cart) {
-      // Create empty cart if it doesn't exist
       cart = await Cart.create({
         user: req.user.id,
         items: [],
@@ -32,9 +72,11 @@ exports.getCart = async (req, res) => {
       });
     }
 
+    const aggregatedCart = await getAggregatedCart(req.user.id) || cart;
+
     res.status(200).json({
       success: true,
-      data: cart
+      data: aggregatedCart
     });
   } catch (error) {
     console.error('Error fetching cart:', error);
@@ -80,15 +122,14 @@ exports.addToCart = async (req, res) => {
       cart.items.push({ product: productId, quantity: qty });
     }
 
-    // Populate products to calculate total
-    await cart.populate('items.product');
-    cart.totalPrice = calculateTotal(cart.items);
-
+    cart.totalPrice = await calculateTotal(cart.items);
     await cart.save();
+
+    const aggregatedCart = await getAggregatedCart(req.user.id);
 
     res.status(200).json({
       success: true,
-      data: cart
+      data: aggregatedCart
     });
   } catch (error) {
     console.error('Error adding to cart:', error);
@@ -124,14 +165,14 @@ exports.updateCartItem = async (req, res) => {
 
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity = qty;
-      
-      await cart.populate('items.product');
-      cart.totalPrice = calculateTotal(cart.items);
+      cart.totalPrice = await calculateTotal(cart.items);
       await cart.save();
+
+      const aggregatedCart = await getAggregatedCart(req.user.id);
 
       res.status(200).json({
         success: true,
-        data: cart
+        data: aggregatedCart
       });
     } else {
       return res.status(404).json({ success: false, message: 'Item not found in cart' });
@@ -158,13 +199,14 @@ exports.removeFromCart = async (req, res) => {
 
     cart.items = cart.items.filter(item => item.product.toString() !== productId);
 
-    await cart.populate('items.product');
-    cart.totalPrice = calculateTotal(cart.items);
+    cart.totalPrice = await calculateTotal(cart.items);
     await cart.save();
+
+    const aggregatedCart = await getAggregatedCart(req.user.id);
 
     res.status(200).json({
       success: true,
-      data: cart
+      data: aggregatedCart
     });
   } catch (error) {
     console.error('Error removing from cart:', error);
