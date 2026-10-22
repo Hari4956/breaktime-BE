@@ -9,6 +9,7 @@ const categoryRoutes = require('./router/categoryRoutes');
 const productRoutes = require('./router/productRoutes');
 const cartRoutes = require('./router/cartRoutes');
 const orderRoutes = require('./router/orderRoutes');
+const comboRoutes = require('./router/comboRoutes');
 
 // 1. Connect to our MongoDB database
 connectDB();
@@ -70,6 +71,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/combos', comboRoutes);
 
 
 // 3. Define the port to listen on.
