@@ -70,30 +70,90 @@ const placeOrder = async (req, res) => {
   }
 };
 
+/**
+ * Helper to build the MongoDB aggregation pipeline for orders,
+ * enriching orders with user details and item product information.
+ */
+const buildOrderAggregationPipeline = (matchStage = null) => {
+  const pipeline = [];
+
+  if (matchStage) {
+    pipeline.push({ $match: matchStage });
+  }
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'items.product',
+        foreignField: '_id',
+        as: 'productDetails'
+      }
+    },
+    {
+      $addFields: {
+        items: {
+          $map: {
+            input: '$items',
+            as: 'item',
+            in: {
+              $mergeObjects: [
+                '$$item',
+                {
+                  product: {
+                    $let: {
+                      vars: {
+                        matchedProduct: {
+                          $arrayElemAt: [
+                            {
+                              $filter: {
+                                input: '$productDetails',
+                                as: 'p',
+                                cond: { $eq: ['$$p._id', '$$item.product'] }
+                              }
+                            },
+                            0
+                          ]
+                        }
+                      },
+                      in: {
+                        $ifNull: ['$$matchedProduct', '$$item.product']
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        productDetails: 0,
+        'user.password': 0,
+        'user.role': 0,
+        'user.__v': 0
+      }
+    },
+    { $sort: { createdAt: -1 } }
+  );
+
+  return pipeline;
+};
+
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'user',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          'user.password': 0,
-          'user.role': 0,
-          'user.addresses': 0,
-          'user.createdAt': 0,
-          'user.updatedAt': 0,
-          'user.__v': 0
-        }
-      },
-      { $sort: { createdAt: -1 } }
-    ]);
+    const orders = await Order.aggregate(buildOrderAggregationPipeline());
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -105,7 +165,12 @@ const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
     const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-    res.status(200).json({ success: true, data: order });
+
+    const [aggregatedOrder] = await Order.aggregate(
+      buildOrderAggregationPipeline({ _id: order._id })
+    );
+
+    res.status(200).json({ success: true, data: aggregatedOrder || order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -113,10 +178,7 @@ const updateOrderStatus = async (req, res) => {
 
 const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.aggregate([
-      { $match: { user: req.user._id } },
-      { $sort: { createdAt: -1 } }
-    ]);
+    const orders = await Order.aggregate(buildOrderAggregationPipeline({ user: req.user._id }));
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
