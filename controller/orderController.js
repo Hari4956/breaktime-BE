@@ -1,5 +1,8 @@
 const Order = require('../model/Order');
 const Cart = require('../model/Cart');
+const User = require('../model/User');
+const Product = require('../model/Product');
+const Category = require('../model/Category');
 const mongoose = require('mongoose');
 
 const placeOrder = async (req, res) => {
@@ -185,4 +188,98 @@ const getMyOrders = async (req, res) => {
   }
 };
 
-module.exports = { placeOrder, getAllOrders, updateOrderStatus, getMyOrders };
+const getDashboardStats = async (req, res) => {
+  try {
+    const orders = await Order.aggregate(buildOrderAggregationPipeline());
+    const totalOrders = orders.length;
+    const totalRevenue = Math.round(orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) * 100) / 100;
+
+    // Today's orders
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayOrdersList = orders.filter(o => o.createdAt && new Date(o.createdAt) >= today);
+    const todayOrdersCount = todayOrdersList.length;
+    const todayRevenue = Math.round(todayOrdersList.reduce((sum, o) => sum + (o.totalAmount || 0), 0) * 100) / 100;
+
+    const totalCustomers = await User.countDocuments();
+    const totalProducts = await Product.countDocuments();
+    const totalCategories = await Category.countDocuments();
+
+    // Status counts
+    const statusCounts = {
+      Completed: orders.filter(o => o.status === 'Completed').length,
+      Preparing: orders.filter(o => o.status === 'Preparing').length,
+      Ready: orders.filter(o => o.status === 'Ready').length,
+      Pending: orders.filter(o => o.status === 'Pending').length,
+      Cancelled: orders.filter(o => o.status === 'Cancelled').length,
+    };
+
+    // Day of week revenue & orders (Mon to Sun)
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dayData = days.map(d => ({ name: d, revenue: 0, orders: 0 }));
+    orders.forEach(o => {
+      if (o.createdAt) {
+        const d = new Date(o.createdAt).getDay();
+        const idx = d === 0 ? 6 : d - 1; // Sun -> index 6, Mon -> index 0
+        dayData[idx].revenue += Math.round(o.totalAmount || 0);
+        dayData[idx].orders += 1;
+      }
+    });
+
+    // Top selling items
+    const itemMap = {};
+    orders.forEach(o => {
+      (o.items || []).forEach(it => {
+        const name = it.name || it.product?.name || 'Item';
+        const img = it.product?.image || '';
+        if (!itemMap[name]) itemMap[name] = { name, orders: 0, revenue: 0, image: img };
+        itemMap[name].orders += (it.quantity || 1);
+        itemMap[name].revenue += Math.round(((it.price || 0) * (it.quantity || 1)) * 100) / 100;
+        if (!itemMap[name].image && img) itemMap[name].image = img;
+      });
+    });
+    const topItems = Object.values(itemMap)
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 5)
+      .map((item, index) => ({ id: index + 1, ...item }));
+
+    // Recent orders (latest 5)
+    const recentOrders = orders.slice(0, 5);
+
+    // Recent customers (latest 5)
+    const recentCustomers = await User.find({ role: { $ne: 'admin' } })
+      .select('name email phone createdAt')
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalOrders,
+          totalRevenue,
+          todayOrders: todayOrdersCount,
+          todayRevenue,
+          pendingOrders: statusCounts.Pending,
+          preparingOrders: statusCounts.Preparing,
+          readyOrders: statusCounts.Ready,
+          completedOrders: statusCounts.Completed,
+          cancelledOrders: statusCounts.Cancelled,
+          totalCustomers,
+          totalProducts,
+          totalCategories
+        },
+        chartData: dayData,
+        statusCounts,
+        recentOrders,
+        topItems,
+        recentCustomers
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { placeOrder, getAllOrders, updateOrderStatus, getMyOrders, getDashboardStats };
