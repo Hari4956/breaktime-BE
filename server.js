@@ -21,7 +21,7 @@ const app = express();
 const allowedOrigins = [
   'https://meek-truffle-54190b.netlify.app',
   'http://localhost:5173',
-  'http://localhost:3000',
+  'https://benevolent-horse-0bae2b.netlify.app',
 ];
 
 app.use(
